@@ -94,8 +94,6 @@ def general_agent():
                                                         """,
                                          retriever_top_k=3)
     
-    
-    
     query_engine_tools = [
         QueryEngineTool(
             query_engine=enviro_agent,
@@ -116,4 +114,4 @@ def general_agent():
     outer_agent = ReActAgent.from_tools(query_engine_tools, llm=llm, verbose=True)
     return outer_agent
 
-enviro_agent = general_agent()
+agent = general_agent()

@@ -42,7 +42,7 @@ sources = [
 
 @app.post("/query_agent", response_model=QueryResponse)
 async def query_agent(request: QueryRequest):
-    query = agent.enviro_agent.query(request.query)
+    query = agent.agent.query(request.query)
     return QueryResponse(content=query.response, files=sources)
 
 @app.get("/download/{filename}")
