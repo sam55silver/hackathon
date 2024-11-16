@@ -13,24 +13,22 @@ from llama_index.core import SimpleDirectoryReader, VectorStoreIndex, SummaryInd
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core import StorageContext, load_index_from_storage
 
-from llama_index.llms.openai import OpenAI
-from llama_index.core.agent import FunctionCallingAgentWorker
-from llama_index.core.agent import AgentRunner
 from llama_index.core.tools import FunctionTool
 
 from llama_index.core import SimpleDirectoryReader, VectorStoreIndex, SummaryIndex
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.tools import FunctionTool, QueryEngineTool
 from llama_index.core.vector_stores import MetadataFilters, FilterCondition
+from llama_index.core.objects import ObjectIndex
 from typing import List, Optional
-from tavily import TavilyClient
 from pathlib import Path
 import glob
 import os
 import tqdm
 file_path = "../../data/Enviro Nova Scotia/rs-HirondelleRivageBankSwallow-v00-2022Apr-eng.pdf"
 os.environ["OPENAI_API_KEY"] = "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"
-
+# perplixica 
+# perplexipy
 
 
 # load documents
@@ -43,6 +41,17 @@ def build_vector_and_summary_index(files, save_path):
     summary_index = SummaryIndex(nodes)
     summary_index.storage_context.persist(persist_dir=os.path.join(save_path, 'summary'))
 
+def build_obj_indexes(index_dir, save_path):
+    tools = return_tools_from_index_store(index_dir)
+    
+    obj_index = ObjectIndex.from_objects(
+        tools,
+        index_cls=VectorStoreIndex,
+    )
+    vector_index = obj_index.as_index(VectorStoreIndex)
+    vector_index.storage_context.persist(persist_dir=save_path)
+    
+    
 def build_indexes_from_dir(root_dir, root_save_dir):
     # we are going to build a vector over all of the docs. 
     # build a vector index over each specific paper
@@ -50,15 +59,17 @@ def build_indexes_from_dir(root_dir, root_save_dir):
     for doc in tqdm.tqdm(docs):
         print(doc)
         build_vector_and_summary_index([doc], os.path.join(root_save_dir, os.path.basename(doc).split(".")[0]))
-
-def return_tools_from_index_store(root_dir):
-    def load_index(index_name):
+        
+def load_index(index_name):
         # rebuild storage context
         storage_context = StorageContext.from_defaults(persist_dir=index_name)
 
         # load index
         index = load_index_from_storage(storage_context)
         return index
+    
+def return_tools_from_index_store(root_dir):
+    
     vectors = glob.glob(os.path.join(root_dir, "*/"))
     tools = []
     for v in vectors:
@@ -125,5 +136,7 @@ def return_tools_from_index_store(root_dir):
     
 if __name__ == "__main__":
     # build_indexes_from_dir(root_dir="C:/Users/NoahB/hackathon/data/enviro_ns_refined")
-    build_indexes_from_dir("C:/Users/NoahB/hackathon/data/Planning Appl", "C:/Users/NoahB/hackathon/data/indexes/planning_app")
+    # build_indexes_from_dir("C:/Users/NoahB/hackathon/data/Planning Appl", "C:/Users/NoahB/hackathon/data/indexes/planning_app")
     # print(return_tools_from_index_store(r"C:/Users/NoahB/hackathon/data/indexes/enviro_ns"))
+    build_obj_indexes("C:/Users/NoahB/hackathon/data/indexes/enviro_ns", "C:/Users/NoahB/hackathon/data/indexes/enviro_ns_obj")
+    build_obj_indexes("C:/Users/NoahB/hackathon/data/indexes/planning_app", "C:/Users/NoahB/hackathon/data/indexes/planning_app_obj")

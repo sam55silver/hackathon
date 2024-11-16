@@ -13,10 +13,13 @@ If not enought information in docs is available provide naturalist tool to searc
 """
 from llama_index.core import VectorStoreIndex
 from llama_index.core.objects import ObjectIndex
-from llama_index.core.agent import FunctionCallingAgentWorker
 from llama_index.core.agent import AgentRunner
 from llama_index.llms.openai import OpenAI
-
+from llama_index.core.tools import QueryEngineTool, ToolMetadata
+from llama_index.core.agent import (
+    FunctionCallingAgentWorker,
+)
+from llama_index.core.agent import ReActAgent
 
 from .utils import return_tools_from_index_store
 
@@ -38,11 +41,46 @@ def pdf_agent(index_dir, system_prompt, retriever_top_k=3):
     )
     
     return AgentRunner(agent_worker)
-    
-enviro_agent = pdf_agent(index_dir="../../data/indexes/enviro_ns",
-                            system_prompt= """ \
-                            You are an agent designed to answer queries over a set of given papers.
-                            Please always use the tools provided to answer a question. Do not rely on prior knowledge./
 
-                            """,
-                            retriever_top_k=3)
+def general_agent():
+    
+    enviro_agent = pdf_agent(index_dir="./data/indexes/enviro_ns",
+                                system_prompt= """ \
+                                You are an agent designed to answer queries over a set of given papers.
+                                Please always use the tools provided to answer a question. Do not rely on prior knowledge./
+
+                                """,
+                                retriever_top_k=3)
+
+    planner_agent = pdf_agent(index_dir="./data/indexes/planning_app",
+                                system_prompt= """ \
+                                You are an agent designed to answer queries over a set of given papers.
+                                Please always use the tools provided to answer a question. Do not rely on prior knowledge./
+
+                                """,
+                                retriever_top_k=3)
+    
+    query_engine_tools = [
+        QueryEngineTool(
+            query_engine=enviro_agent,
+            metadata=ToolMetadata(
+                name="enviro_agent", description="Agent that has information related to the environment."
+            ),
+        ),
+        QueryEngineTool(
+            query_engine=planner_agent,
+            metadata=ToolMetadata(
+                name="planner_agent",
+                description="Agent that has information related to planning.",
+            ),
+        ),
+    ]
+    llm = OpenAI(model="gpt-3.5-turbo")
+    outer_agent = ReActAgent.from_tools(query_engine_tools, llm=llm, verbose=True)
+    return outer_agent
+
+agent = general_agent()
+response = agent.query("can you tell me about atlantic coastal plain flora ammendment."
+                       "can you share the page number where this is explained")
+
+print(str(response))
