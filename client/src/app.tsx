@@ -1,72 +1,132 @@
 import { Button } from './components/ui/button';
-import { MapPin } from 'lucide-react';
+import { File, Link } from 'lucide-react';
 import WindSVG from './assets/wind-turbines-icon.svg';
 import React from 'react';
+import { Textarea } from './components/ui/textarea';
+
+enum MessageType {
+  user = 'User',
+  agent = 'Agent',
+  loading = 'Loading',
+}
+
+enum SourceType {
+  file = 'file',
+  link = 'link',
+}
+
+interface Source {
+  name: string;
+  link: string;
+  type: SourceType;
+}
+
+interface Message {
+  type: MessageType;
+  content: string;
+  sources: null | Source[];
+}
 
 function App() {
-  const [location, setLocation] = React.useState('');
-  const [socket, setSocket] = React.useState<WebSocket | null>(null);
-  const [messages, setMessages] = React.useState<string[]>([]);
-
-  React.useEffect(() => {
-    const ws = new WebSocket('ws://localhost:8000/ws');
-
-    ws.onopen = () => {
-      console.log('WebSocket connected');
-    };
-
-    ws.onmessage = (event) => {
-      // Handle incoming messages
-      setMessages((prevMessages: string[]) => [...prevMessages, event.data]);
-    };
-
-    ws.onclose = () => {
-      console.log('WebSocket disconnected');
-    };
-
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-
-    setSocket(ws);
-
-    // Cleanup on unmount
-    return () => {
-      ws.close();
-    };
-  }, []);
-
-  const sendMessage = () => {
-    if (socket && location) {
-      socket.send(location);
-      setLocation('');
-    }
-  };
+  const [query, setQuery] = React.useState('');
+  const [messages, setMessages] = React.useState<Message[]>([]);
 
   const handleInputChange = (event: any) => {
-    setLocation(event.target.value); // Update state with input's value
+    setQuery(event.target.value); // Update state with input's value
   };
 
+  const sendMessage = () => {
+    const userMsg = { type: MessageType.user, content: query, sources: null };
+    const loading = { type: MessageType.loading, content: '', sources: null };
+    setMessages([...messages, userMsg, loading]);
+    setQuery('');
+
+    fetch('http://localhost:8000/query_agent', {
+      method: 'POST',
+      body: JSON.stringify({ query }),
+      headers: { 'Content-Type': 'application/json' },
+    })
+      .then((data) => data.json())
+      .then((data) =>
+        setMessages([
+          ...messages,
+          userMsg,
+          {
+            type: MessageType.agent,
+            content: data.content,
+            sources: data.sources,
+          },
+        ])
+      );
+  };
+
+  React.useEffect(() => console.log(messages), [messages]);
+
   return (
-    <main className="font-geist text-black h-dvh w-full flex flex-col justify-center items-center gap-8">
-      <img className="w-48" src={WindSVG} />
-      <h1 className="text-4xl text-bold">Onshore Wind Development</h1>
-      <div className="flex gap-2 items-center h-14 w-1/2 rounded-2xl border border-black bg-background px-4 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm">
-        <MapPin />
-        <input
-          value={location}
-          onChange={handleInputChange}
-          className="placeholder:text-muted-foreground w-full py-2 focus:outline-none"
-          placeholder="What is your project size and location?"
-        ></input>
+    <main className="p-8 font-geist text-black min-h-dvh w-full flex flex-col justify-center items-center gap-8 container mx-auto">
+      <div className="flex flex-row gap-2 items-end justify-center">
+        <img className="w-32 pb-2" src={WindSVG} />
+        <h2 className="text-7xl">👷‍♀️</h2>
       </div>
-      <Button onClick={sendMessage} className="text-lg">
-        Get Resources
-      </Button>
-      <div className="h-20">
-        {messages.map((message: string) => (
-          <p>{message}</p>
-        ))}
+      <h1 className="text-3xl text-bold">Sustainable Developer Agent</h1>
+      {messages.length != 0 ? (
+        <div className="space-y-5 max-w-xl w-full">
+          {messages.map((message: Message, id: number) => (
+            <div key={id}>
+              <div
+                className={`text-sm w-fit bg-slate-200 rounded-md p-3 ${message.type == MessageType.user ? 'ml-auto' : ''}`}
+              >
+                <p className="font-semibold">{message.type}</p>
+                <p className="mt-2">{message.content}</p>
+              </div>
+              {message.sources != null ? (
+                <div className="mt-2 space-y-2">
+                  {message.sources.map((source: Source) => (
+                    <div className="text-sm w-fit bg-slate-200 rounded-md p-3 flex flex-row justify-center items-center gap-2">
+                      {source.type == SourceType.file ? (
+                        <>
+                          <File width={20} height={20} />
+                          <a
+                            className="text-primary underline"
+                            href={`http://localhost:8000/download/${source.link}`}
+                          >
+                            {source.name}
+                          </a>
+                        </>
+                      ) : (
+                        <>
+                          <Link width={20} height={20} />
+                          <a
+                            className="text-primary underline"
+                            href={source.link}
+                          >
+                            {source.name}
+                          </a>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <></>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <></>
+      )}
+      <div className="max-w-xl items-center flex flex-col gap-4 w-full">
+        <Textarea
+          value={query}
+          placeholder="Ask any questions about onshore wind development in the Nova Scotia area."
+          onChange={handleInputChange}
+          className="border-black"
+          rows={1}
+        />
+        <Button className="w-full" onClick={sendMessage}>
+          Submit
+        </Button>
       </div>
     </main>
   );

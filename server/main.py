@@ -1,7 +1,11 @@
-from fastapi import FastAPI, WebSocket
+from typing import List
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from lib import agent 
+from pathlib import Path
+
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -23,19 +27,37 @@ app.add_middleware(
 class QueryRequest(BaseModel):
     query: str
 
+
+class Source(BaseModel):
+    name: str
+    link: str
+    type: str
+
 class QueryResponse(BaseModel):
-    output: str
+    content: str
+    sources: List[Source]
 
-@app.post("/query_location", response_model=QueryResponse)
-async def query_location(request: QueryRequest):
-    return QueryResponse(output=request.query)
+sources = [
+    Source(name="sr_snapping_turtle_0809_e.pdf", link="sr_snapping_turtle_0809_e.pdf", type="file"),
+    Source(name="Black River Wind Limited Renewable Energy", link="https://www.cbc.ca/news/canada/nova-scotia/nova-scotia-renewable-energy-wind-farm-windsor-hants-county-benjamins-mills-1.6320351", type="link")
+]
 
+@app.post("/query_agent", response_model=QueryResponse)
+async def query_agent(request: QueryRequest):
+    query = await agent.agent.aquery(request.query)
+    return QueryResponse(content=query.response, sources=sources)
 
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    while True:
-        data = await websocket.receive_text()
-        async for text in agent.enviro_agent.query(data):
-            await websocket.send_text(text)
-        await websocket.send_text("[END]")
+@app.get("/download/{filename}")
+async def download_file(filename: str):
+    file_path = Path("../data/raw/enviro-ns") / filename
+    if file_path.exists():
+        return FileResponse(file_path, media_type='application/octet-stream', filename=filename)
+    return {"error": "File not found"}
+
+# @app.websocket("/ws")
+# async def websocket_endpoint(websocket: WebSocket):
+#     await websocket.accept()
+#     while True:
+#         data = await websocket.receive_text()
+#         query = agent.enviro_agent.query(data)
+#         await websocket.send_text(query.response)

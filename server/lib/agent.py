@@ -20,9 +20,9 @@ from llama_index.core.agent import (
     FunctionCallingAgentWorker,
 )
 from llama_index.core.agent import ReActAgent
-import os
-from typing import Optional, List
 from .utils import return_tools_from_index_store, build_global_planner_tools
+
+from .perplexica import search_internet_tool
 
 def build_agent(tools, system_prompt, retriever_top_k=3):
     llm = OpenAI(model="gpt-3.5-turbo")
@@ -51,7 +51,6 @@ def global_planner_agent(system_prompt, retriever_top_k=3):
     
     
 def general_agent():
-    
     enviro_agent = pdf_agent(index_dir="./data/indexes/enviro_ns",
                                 system_prompt=f""" /
                                 ### Role
@@ -94,8 +93,6 @@ def general_agent():
                                                         """,
                                          retriever_top_k=3)
     
-    
-    
     query_engine_tools = [
         QueryEngineTool(
             query_engine=enviro_agent,
@@ -110,10 +107,11 @@ def general_agent():
                 description="identify ecosystems and habitats that might be present at the specific user inputted project location",
             ),
         ),
+        search_internet_tool
     ]
     llm = OpenAI(model="gpt-3.5-turbo")
     
     outer_agent = ReActAgent.from_tools(query_engine_tools, llm=llm, verbose=True)
     return outer_agent
 
-enviro_agent = general_agent()
+agent = general_agent()
