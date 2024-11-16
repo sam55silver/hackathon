@@ -28,11 +28,9 @@ from pathlib import Path
 import glob
 import os
 import tqdm
-file_path = "C:/Users/NoahB/hackathon/data/Enviro Nova Scotia/rs-HirondelleRivageBankSwallow-v00-2022Apr-eng.pdf"
+file_path = "../../data/Enviro Nova Scotia/rs-HirondelleRivageBankSwallow-v00-2022Apr-eng.pdf"
 os.environ["OPENAI_API_KEY"] = "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"
 
-
-import pdfplumber
 
 
 # load documents
