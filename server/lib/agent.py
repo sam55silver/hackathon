@@ -18,7 +18,7 @@ from llama_index.core.agent import AgentRunner
 from llama_index.llms.openai import OpenAI
 
 
-from utils import return_tools_from_index_store
+from .utils import return_tools_from_index_store
 
 def pdf_agent(index_dir, system_prompt, retriever_top_k=3):
     
@@ -39,17 +39,10 @@ def pdf_agent(index_dir, system_prompt, retriever_top_k=3):
     
     return AgentRunner(agent_worker)
     
-enviro_agent = pdf_agent(index_dir="C:/Users/NoahB/hackathon/data/indexes/enviro_ns",
+enviro_agent = pdf_agent(index_dir="../../data/indexes/enviro_ns",
                             system_prompt= """ \
                             You are an agent designed to answer queries over a set of given papers.
                             Please always use the tools provided to answer a question. Do not rely on prior knowledge./
 
                             """,
                             retriever_top_k=3)
-
-
-response = enviro_agent.query(
-    "Tell me about atlantic coastal plain flora ammendment "
-    "and find a document about a similar area."
-)
-print(str(response))

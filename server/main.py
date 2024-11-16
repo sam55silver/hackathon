@@ -1,6 +1,7 @@
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from lib import agent 
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -35,4 +36,6 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     while True:
         data = await websocket.receive_text()
-        await websocket.send_text(f"Message received: {data}")
+        async for text in agent.enviro_agent.query(data):
+            await websocket.send_text(text)
+        await websocket.send_text("[END]")
