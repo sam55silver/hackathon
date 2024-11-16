@@ -23,6 +23,9 @@ from llama_index.core.agent import ReActAgent
 import os
 from typing import Optional, List
 from .utils import return_tools_from_index_store, build_global_planner_tools
+from .utils import return_tools_from_index_store
+
+from .perplexica import search_internet_tool
 
 def build_agent(tools, system_prompt, retriever_top_k=3):
     llm = OpenAI(model="gpt-3.5-turbo")
@@ -108,6 +111,7 @@ def general_agent():
                 description="identify ecosystems and habitats that might be present at the specific user inputted project location",
             ),
         ),
+        search_internet_tool
     ]
     llm = OpenAI(model="gpt-3.5-turbo")
     

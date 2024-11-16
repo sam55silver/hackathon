@@ -7,6 +7,7 @@ import { Textarea } from './components/ui/textarea';
 enum MessageType {
   user = 'User',
   agent = 'Agent',
+  loading = 'Loading',
 }
 
 interface FileType {
@@ -30,7 +31,8 @@ function App() {
 
   const sendMessage = () => {
     const userMsg = { type: MessageType.user, content: query, files: null };
-    setMessages([...messages, userMsg]);
+    const loading = { type: MessageType.loading, content: '', files: null };
+    setMessages([...messages, userMsg, loading]);
     setQuery('');
 
     fetch('http://localhost:8000/query_agent', {
@@ -50,45 +52,53 @@ function App() {
 
   return (
     <main className="p-8 font-geist text-black min-h-dvh w-full flex flex-col justify-center items-center gap-8 container mx-auto">
-      <img className="w-32" src={WindSVG} />
-      <h1 className="text-3xl text-bold">Onshore Wind Development</h1>
-      <div className="space-y-5 max-w-xl w-full">
-        {messages.map((message: Message, id: number) => (
-          <div key={id}>
-            <div
-              className={`text-sm w-fit bg-slate-200 rounded-md p-3 ${message.type == MessageType.user ? 'ml-auto' : ''}`}
-            >
-              <p className="font-semibold">{message.type}</p>
-              <p className="mt-2">{message.content}</p>
-            </div>
-            {message.files != null ? (
-              <div className="mt-2">
-                {message.files.map((file: FileType) => (
-                  <div className="text-sm w-fit bg-slate-200 rounded-md p-3 flex flex-col justify-center items-center gap-2">
-                    <File width={20} height={20} />
-                    <a
-                      className="text-primary underline"
-                      href={`http://localhost:8000/download/${file.link}`}
-                    >
-                      {file.name}
-                    </a>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <></>
-            )}
-          </div>
-        ))}
+      <div className="flex flex-row gap-2 items-end justify-center">
+        <img className="w-32 pb-2" src={WindSVG} />
+        <h2 className="text-7xl">👷‍♀️</h2>
       </div>
-      <div className="max-w-2xl items-center flex flex-col gap-4 w-full">
+      <h1 className="text-3xl text-bold">Sustainable Developer Agent</h1>
+      {messages.length != 0 ? (
+        <div className="space-y-5 max-w-xl w-full">
+          {messages.map((message: Message, id: number) => (
+            <div key={id}>
+              <div
+                className={`text-sm w-fit bg-slate-200 rounded-md p-3 ${message.type == MessageType.user ? 'ml-auto' : ''}`}
+              >
+                <p className="font-semibold">{message.type}</p>
+                <p className="mt-2">{message.content}</p>
+              </div>
+              {message.files != null ? (
+                <div className="mt-2">
+                  {message.files.map((file: FileType) => (
+                    <div className="text-sm w-fit bg-slate-200 rounded-md p-3 flex flex-col justify-center items-center gap-2">
+                      <File width={20} height={20} />
+                      <a
+                        className="text-primary underline"
+                        href={`http://localhost:8000/download/${file.link}`}
+                      >
+                        {file.name}
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <></>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <></>
+      )}
+      <div className="max-w-xl items-center flex flex-col gap-4 w-full">
         <Textarea
           value={query}
+          placeholder="Ask any questions about onshore wind development in the Nova Scotia area."
           onChange={handleInputChange}
           className="border-black"
           rows={1}
         />
-        <Button className="w-36" onClick={sendMessage}>
+        <Button className="w-full" onClick={sendMessage}>
           Submit
         </Button>
       </div>
