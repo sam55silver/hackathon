@@ -80,7 +80,7 @@ function App() {
                 <p className="mt-2">{message.content}</p>
               </div>
               {message.sources != null ? (
-                <div className="mt-2 space-y-5">
+                <div className="mt-2 space-y-2">
                   {message.sources.map((source: Source) => (
                     <div className="text-sm w-fit bg-slate-200 rounded-md p-3 flex flex-row justify-center items-center gap-2">
                       {source.type == SourceType.file ? (

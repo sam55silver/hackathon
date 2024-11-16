@@ -37,7 +37,8 @@ class QueryResponse(BaseModel):
     sources: List[Source]
 
 sources = [
-    Source(name="sr_snapping_turtle_0809_e.pdf", link="sr_snapping_turtle_0809_e.pdf", type="file")
+    Source(name="sr_snapping_turtle_0809_e.pdf", link="sr_snapping_turtle_0809_e.pdf", type="file"),
+    Source(name="Link to olama", link="https://docs.llamaindex.ai/en/stable/examples/agent/agent_runner/agent_runner/", type="link")
 ]
 
 @app.post("/query_agent", response_model=QueryResponse)
