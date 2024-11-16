@@ -1,5 +1,5 @@
 import { Button } from './components/ui/button';
-import { File } from 'lucide-react';
+import { File, Link } from 'lucide-react';
 import WindSVG from './assets/wind-turbines-icon.svg';
 import React from 'react';
 import { Textarea } from './components/ui/textarea';
@@ -10,15 +10,21 @@ enum MessageType {
   loading = 'Loading',
 }
 
-interface FileType {
+enum SourceType {
+  file = 'file',
+  link = 'link',
+}
+
+interface Source {
   name: string;
   link: string;
+  type: SourceType;
 }
 
 interface Message {
   type: MessageType;
   content: string;
-  files: null | FileType[];
+  sources: null | Source[];
 }
 
 function App() {
@@ -30,8 +36,8 @@ function App() {
   };
 
   const sendMessage = () => {
-    const userMsg = { type: MessageType.user, content: query, files: null };
-    const loading = { type: MessageType.loading, content: '', files: null };
+    const userMsg = { type: MessageType.user, content: query, sources: null };
+    const loading = { type: MessageType.loading, content: '', sources: null };
     setMessages([...messages, userMsg, loading]);
     setQuery('');
 
@@ -45,10 +51,16 @@ function App() {
         setMessages([
           ...messages,
           userMsg,
-          { type: MessageType.agent, content: data.content, files: data.files },
+          {
+            type: MessageType.agent,
+            content: data.content,
+            sources: data.sources,
+          },
         ])
       );
   };
+
+  React.useEffect(() => console.log(messages), [messages]);
 
   return (
     <main className="p-8 font-geist text-black min-h-dvh w-full flex flex-col justify-center items-center gap-8 container mx-auto">
@@ -67,17 +79,31 @@ function App() {
                 <p className="font-semibold">{message.type}</p>
                 <p className="mt-2">{message.content}</p>
               </div>
-              {message.files != null ? (
-                <div className="mt-2">
-                  {message.files.map((file: FileType) => (
-                    <div className="text-sm w-fit bg-slate-200 rounded-md p-3 flex flex-col justify-center items-center gap-2">
-                      <File width={20} height={20} />
-                      <a
-                        className="text-primary underline"
-                        href={`http://localhost:8000/download/${file.link}`}
-                      >
-                        {file.name}
-                      </a>
+              {message.sources != null ? (
+                <div className="mt-2 space-y-5">
+                  {message.sources.map((source: Source) => (
+                    <div className="text-sm w-fit bg-slate-200 rounded-md p-3 flex flex-row justify-center items-center gap-2">
+                      {source.type == SourceType.file ? (
+                        <>
+                          <File width={20} height={20} />
+                          <a
+                            className="text-primary underline"
+                            href={`http://localhost:8000/download/${source.link}`}
+                          >
+                            {source.name}
+                          </a>
+                        </>
+                      ) : (
+                        <>
+                          <Link width={20} height={20} />
+                          <a
+                            className="text-primary underline"
+                            href={source.link}
+                          >
+                            {source.name}
+                          </a>
+                        </>
+                      )}
                     </div>
                   ))}
                 </div>

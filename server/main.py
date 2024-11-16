@@ -27,23 +27,23 @@ class QueryRequest(BaseModel):
     query: str
 
 
-class File(BaseModel):
+class Source(BaseModel):
     name: str
     link: str
+    type: str
 
 class QueryResponse(BaseModel):
     content: str
-    files: List[File]
-
+    sources: List[Source]
 
 sources = [
-    File(name="sr_snapping_turtle_0809_e.pdf", link="sr_snapping_turtle_0809_e.pdf")
+    Source(name="sr_snapping_turtle_0809_e.pdf", link="sr_snapping_turtle_0809_e.pdf", type="file")
 ]
 
 @app.post("/query_agent", response_model=QueryResponse)
 async def query_agent(request: QueryRequest):
     query = agent.agent.query(request.query)
-    return QueryResponse(content=query.response, files=sources)
+    return QueryResponse(content=query.response, sources=sources)
 
 @app.get("/download/{filename}")
 async def download_file(filename: str):
