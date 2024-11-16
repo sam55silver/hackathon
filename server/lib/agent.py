@@ -20,10 +20,7 @@ from llama_index.core.agent import (
     FunctionCallingAgentWorker,
 )
 from llama_index.core.agent import ReActAgent
-import os
-from typing import Optional, List
 from .utils import return_tools_from_index_store, build_global_planner_tools
-from .utils import return_tools_from_index_store
 
 from .perplexica import search_internet_tool
 
@@ -54,7 +51,6 @@ def global_planner_agent(system_prompt, retriever_top_k=3):
     
     
 def general_agent():
-    
     enviro_agent = pdf_agent(index_dir="./data/indexes/enviro_ns",
                                 system_prompt=f""" /
                                 ### Role

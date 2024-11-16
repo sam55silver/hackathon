@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from lib import agent 
 from pathlib import Path
 
+
 # Initialize FastAPI app
 app = FastAPI()
 
@@ -38,12 +39,12 @@ class QueryResponse(BaseModel):
 
 sources = [
     Source(name="sr_snapping_turtle_0809_e.pdf", link="sr_snapping_turtle_0809_e.pdf", type="file"),
-    Source(name="Link to olama", link="https://docs.llamaindex.ai/en/stable/examples/agent/agent_runner/agent_runner/", type="link")
+    Source(name="Black River Wind Limited Renewable Energy", link="https://www.cbc.ca/news/canada/nova-scotia/nova-scotia-renewable-energy-wind-farm-windsor-hants-county-benjamins-mills-1.6320351", type="link")
 ]
 
 @app.post("/query_agent", response_model=QueryResponse)
 async def query_agent(request: QueryRequest):
-    query = agent.agent.query(request.query)
+    query = await agent.agent.aquery(request.query)
     return QueryResponse(content=query.response, sources=sources)
 
 @app.get("/download/{filename}")
